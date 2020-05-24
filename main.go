@@ -1,9 +1,9 @@
 package main
 
 import (
-	"qayyuum/go_fintech/migrations"
+	"qayyuum/go_fintech/api"
 )
 
 func main() {
-	migrations.Migrate()
+	api.StartAPI()
 }
