@@ -5,7 +5,7 @@ import (
 	"qayyuum/go_fintech/interfaces"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
