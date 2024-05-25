@@ -3,7 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"qayyuum/go_fintech/helpers"
@@ -24,7 +24,7 @@ type ErrResponse struct {
 func login(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the body is in order
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	helpers.HandleErr(err)
 
 	// Check for login info
