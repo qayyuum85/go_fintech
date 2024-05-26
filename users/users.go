@@ -10,20 +10,20 @@ import (
 )
 
 // Login - login function signed with jwt token
-func Login(username string, pass string) map[string]interface{} {
-	db := helpers.ConnectDB()
+func Login(username string, pass string) (map[string]interface{}, error) {
+	db, err := helpers.ConnectDB()
 	user := &interfaces.User{}
 
 	// Check for username
 	if db.Where("username = ? ", username).First(&user).RecordNotFound() {
-		return map[string]interface{}{"message": "User not found"}
+		return map[string]interface{}{"message": "User not found"}, nil
 	}
 
 	// Compare the password with db
 	passErr := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(pass))
 
 	if passErr == bcrypt.ErrMismatchedHashAndPassword && passErr != nil {
-		return map[string]interface{}{"message": "Wrong password"}
+		return map[string]interface{}{"message": "Wrong password"}, nil
 	}
 
 	accounts := []interfaces.ResponseAccount{}
@@ -50,11 +50,13 @@ func Login(username string, pass string) map[string]interface{} {
 	// sign the connection with jwt token
 	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tokenContent)
 	token, err := jwtToken.SignedString([]byte("TokenPassword"))
-	helpers.HandleErr(err)
+	if err != nil {
+		return map[string]interface{}{"message": "Error signing token", "error": err.Error()}, err
+	}
 
 	var response = map[string]interface{}{"message": "Login successful"}
 	response["jwt"] = token
 	response["data"] = responseUser
 
-	return response
+	return response, nil
 }

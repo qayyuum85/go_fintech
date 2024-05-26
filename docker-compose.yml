@@ -1,0 +1,26 @@
+services:
+
+  db:
+    image: postgres
+    restart: always
+    shm_size: 128mb
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER_FILE: run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: run/secrets/db_password
+    secrets:
+      - db_user
+      - db_password
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+secrets:
+  db_user:
+    file: secrets/db_user.txt
+  db_password:
+    file: secrets/db_password.txt
