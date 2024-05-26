@@ -1,14 +1,18 @@
 package migrations
 
 import (
+	"fmt"
 	"qayyuum/go_fintech/helpers"
 	"qayyuum/go_fintech/interfaces"
 
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-func createAccounts() {
-	db := helpers.ConnectDB()
+func createAccounts() error {
+	db, err := helpers.ConnectDB()
+	if err != nil {
+		return fmt.Errorf("Error connecting to database: %v", err)
+	}
 
 	users := &[2]interfaces.User{
 		{Username: "Martin", Email: "martin@martin.com"},
@@ -16,7 +20,11 @@ func createAccounts() {
 	}
 
 	for i := 0; i < len(users); i++ {
-		generatedPassword := helpers.HashAndSalt([]byte(users[i].Username))
+		generatedPassword, err := helpers.HashAndSalt([]byte(users[i].Username))
+		if err != nil {
+			fmt.Printf("Unable to generate password for user: %s", users[i].Username)
+			continue
+		}
 		user := &interfaces.User{Username: users[i].Username, Email: users[i].Email, Password: generatedPassword}
 		db.Create(&user)
 
@@ -24,15 +32,22 @@ func createAccounts() {
 		db.Create(&account)
 	}
 	defer db.Close()
+
+	return nil
 }
 
 // Migrate - run migration
-func Migrate() {
+func Migrate() error {
 	User := &interfaces.User{}
 	Account := &interfaces.Account{}
-	db := helpers.ConnectDB()
+	db, err := helpers.ConnectDB()
+	if err != nil {
+		return err
+	}
 	db.AutoMigrate(&User, &Account)
 	defer db.Close()
 
 	createAccounts()
+
+	return nil
 }
