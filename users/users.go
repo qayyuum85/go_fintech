@@ -1,6 +1,7 @@
 package users
 
 import (
+	"fmt"
 	"qayyuum/go_fintech/helpers"
 	"qayyuum/go_fintech/interfaces"
 	"time"
@@ -12,9 +13,13 @@ import (
 // Login - login function signed with jwt token
 func Login(username string, pass string) (map[string]interface{}, error) {
 	db, err := helpers.ConnectDB()
-	user := &interfaces.User{}
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
 
 	// Check for username
+	user := &interfaces.User{}
 	if db.Where("username = ? ", username).First(&user).RecordNotFound() {
 		return map[string]interface{}{"message": "User not found"}, nil
 	}
@@ -31,17 +36,10 @@ func Login(username string, pass string) (map[string]interface{}, error) {
 	// get account info from db
 	db.Table("accounts").Select("id, name, balance").Where("user_id = ? ", user.ID).Scan(&accounts)
 
-	// set the response user
-	responseUser := &interfaces.ResponseUser{
-		ID:       user.ID,
-		Username: user.Username,
-		Email:    user.Email,
-		Accounts: accounts,
-	}
+	return prepareResponse(user, accounts)
+}
 
-	// close the connection to db
-	defer db.Close()
-
+func prepareToken(user *interfaces.User) (string, error) {
 	tokenContent := jwt.MapClaims{
 		"user_id": user.ID,
 		"expiry":  time.Now().Add(time.Minute * 60).Unix(),
@@ -51,7 +49,24 @@ func Login(username string, pass string) (map[string]interface{}, error) {
 	jwtToken := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tokenContent)
 	token, err := jwtToken.SignedString([]byte("TokenPassword"))
 	if err != nil {
-		return map[string]interface{}{"message": "Error signing token", "error": err.Error()}, err
+		return "", err
+	}
+
+	return token, nil
+}
+
+func prepareResponse(user *interfaces.User, accounts []interfaces.ResponseAccount) (map[string]interface{}, error) {
+	// set the response user
+	responseUser := &interfaces.ResponseUser{
+		ID:       user.ID,
+		Username: user.Username,
+		Email:    user.Email,
+		Accounts: accounts,
+	}
+
+	token, err := prepareToken(user)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to prepare token %v", err)
 	}
 
 	var response = map[string]interface{}{"message": "Login successful"}
