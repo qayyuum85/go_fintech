@@ -3,6 +3,8 @@ package helpers
 import (
 	"fmt"
 	"os"
+	"qayyuum/go_fintech/interfaces"
+	"regexp"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
@@ -40,4 +42,27 @@ func ConnectDB() (*gorm.DB, error) {
 		return nil, fmt.Errorf("Unable to connect to database: %v", err)
 	}
 	return db, nil
+}
+
+func Validation(values []interfaces.Validation) bool {
+	username := regexp.MustCompile(`^([A-Za-z0-9]{5,})+$`)
+	email := regexp.MustCompile(`^[A-Za-z0-9]+[@]+[A-Za-z0-9]+[.]+[A-Za-z]+$`)
+
+	for i := 0; i < len(values); i++ {
+		switch values[i].Valid {
+		case "username":
+			if !username.MatchString(values[i].Value) {
+				return false
+			}
+		case "email":
+			if !email.MatchString(values[i].Value) {
+				return false
+			}
+		case "password":
+			if len(values[i].Value) < 5 {
+				return false
+			}
+		}
+	}
+	return true
 }
