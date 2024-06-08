@@ -12,6 +12,14 @@ import (
 
 // Login - login function signed with jwt token
 func Login(username string, pass string) (map[string]interface{}, error) {
+	isValidUser := helpers.Validation([]interfaces.Validation{
+		{Valid: "username", Value: username},
+		{Valid: "password", Value: pass},
+	})
+	if !isValidUser {
+		return map[string]interface{}{"message": "invalid user"}, nil
+	}
+
 	db, err := helpers.ConnectDB()
 	if err != nil {
 		return nil, err
@@ -74,4 +82,8 @@ func prepareResponse(user *interfaces.User, accounts []interfaces.ResponseAccoun
 	response["data"] = responseUser
 
 	return response, nil
+}
+
+func Register(username, email, pass string) error {
+	return nil
 }
