@@ -16,5 +16,8 @@ build:
 run:
 	./finapp
 
+test:
+	ginkgo ./...
+
 # Default target to run all steps
 all: docker-compose build run

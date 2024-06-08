@@ -1,3 +1,9 @@
+# final build
 finapp
+
+# secrets
 secrets/db_password.txt
 secrets/db_user.txt
+
+# vscode settings
+.vscode/
